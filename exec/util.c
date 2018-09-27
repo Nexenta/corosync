@@ -183,7 +183,7 @@ const char *get_run_dir(void)
 		if (env_run_dir != NULL && env_run_dir[0] != '\0') {
 			res = snprintf(path, PATH_MAX, "%s", getenv("COROSYNC_RUN_DIR"));
 		} else {
-			res = snprintf(path, PATH_MAX, "%s/%s", LOCALSTATEDIR, "lib/corosync");
+			res = snprintf(path, PATH_MAX, "%s/%s", LOCALSTATEDIR, "run/corosync");
 		}
 
 		assert(res < PATH_MAX);
