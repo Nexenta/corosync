@@ -21,10 +21,10 @@
 ### END INIT INFO
 
 desc="Corosync Cluster Engine"
-prog="corosync"
+prog="$NEDGE_HOME/sbin/corosync"
 
 # set secure PATH
-PATH="/sbin:/bin:/usr/sbin:/usr/bin:@SBINDIR@"
+PATH="/sbin:/bin:/usr/sbin:/usr/bin:$NEDGE_HOME/nmf:$NEDGE_HOME/src/nmf:@SBINDIR@"
 
 success()
 {
@@ -36,9 +36,22 @@ failure()
 	echo -ne "[FAILED]\r"
 }
 
+nspid()
+{
+	PNAME=$1
+	NETNSID=`ps -eo pid,netns,cmd|awk '{if ($1 == 1) print $2}'`
+	PID=`ps -eo pid,netns,cmd | grep $NETNSID | grep -v grep | grep $PNAME | awk '{print $1}'`
+	if [ ${#PID} -gt 0 ]; then
+		echo $PID
+		return 0
+	else
+		return 1
+	fi
+}
+
 status()
 {
-	pid=$(pidof $1 2>/dev/null)
+	pid=$(nspid $1 2>/dev/null)
 	res=$?
 	if [ $res -ne 0 ]; then
 		echo "$1 is stopped"
@@ -53,9 +66,9 @@ status()
 case '@INITCONFIGDIR@' in
     */sysconfig) # rpm based distros
 	[ -f @INITDDIR@/functions ] && . @INITDDIR@/functions
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@LOCALSTATEDIR@/lock/subsys/$prog";;
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@LOCALSTATEDIR@/lock/subsys/`basename $prog`";;
     */default) # deb based distros
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@LOCALSTATEDIR@/lock/$prog";;
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@LOCALSTATEDIR@/lock/`basename $prog`";;
 esac
 
 # The version of __pids_pidof in /etc/init.d/functions calls pidof with -x
