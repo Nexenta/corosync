@@ -53,7 +53,7 @@
 #define INTERFACE_MAX		2
 
 #define BIND_MAX_RETRIES	10
-#define BIND_RETRIES_INTERVAL	100
+#define BIND_RETRIES_INTERVAL	500
 
 /**
  * Maximum number of continuous gather states
