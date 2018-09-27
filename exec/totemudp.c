@@ -294,7 +294,7 @@ static inline void ucast_sendmsg (
 	 * Build unicast message
 	 */
 	memset(&msg_ucast, 0, sizeof(msg_ucast));
-	totemip_totemip_to_sockaddr_convert(system_to,
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, system_to,
 		instance->totem_interface->ip_port, &sockaddr, &addrlen);
 	msg_ucast.msg_name = &sockaddr;
 	msg_ucast.msg_namelen = addrlen;
@@ -367,7 +367,7 @@ static inline void mcast_sendmsg (
 	/*
 	 * Build multicast message
 	 */
-	totemip_totemip_to_sockaddr_convert(&instance->mcast_address,
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, &instance->mcast_address,
 		instance->totem_interface->ip_port, &sockaddr, &addrlen);
 	memset(&msg_mcast, 0, sizeof(msg_mcast));
 	msg_mcast.msg_name = &sockaddr;
@@ -760,7 +760,7 @@ static int totemudp_build_sockets_ip (
 	/*
 	 * Create multicast recv socket
 	 */
-	sockets->mcast_recv = socket (bindnet_address->family, SOCK_DGRAM, 0);
+	sockets->mcast_recv = socket (bindnet_address->family, SOCK_DGRAM, IPPROTO_UDP);
 	if (sockets->mcast_recv == -1) {
 		LOGSYS_PERROR (errno, instance->totemudp_log_level_warning,
 			"socket() failed");
@@ -809,7 +809,7 @@ static int totemudp_build_sockets_ip (
 	/*
 	 * Setup mcast send socket
 	 */
-	sockets->mcast_send = socket (bindnet_address->family, SOCK_DGRAM, 0);
+	sockets->mcast_send = socket (bindnet_address->family, SOCK_DGRAM, IPPROTO_UDP);
 	if (sockets->mcast_send == -1) {
 		LOGSYS_PERROR (errno, instance->totemudp_log_level_warning,
 			"socket() failed");
@@ -834,8 +834,8 @@ static int totemudp_build_sockets_ip (
 		return (-1);
 	}
 
-	totemip_totemip_to_sockaddr_convert(bound_to, instance->totem_interface->ip_port - 1,
-		&sockaddr, &addrlen);
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id,
+	    bound_to, instance->totem_interface->ip_port - 1, &sockaddr, &addrlen);
 
 	retries = 0;
 	while (1) {
@@ -861,7 +861,7 @@ static int totemudp_build_sockets_ip (
 	/*
 	 * Setup unicast socket
 	 */
-	sockets->token = socket (bindnet_address->family, SOCK_DGRAM, 0);
+	sockets->token = socket (bindnet_address->family, SOCK_DGRAM, IPPROTO_UDP);
 	if (sockets->token == -1) {
 		LOGSYS_PERROR (errno, instance->totemudp_log_level_warning,
 			"socket() failed");
@@ -890,7 +890,8 @@ static int totemudp_build_sockets_ip (
 	 * Bind to unicast socket used for token send/receives
 	 * This has the side effect of binding to the correct interface
 	 */
-	totemip_totemip_to_sockaddr_convert(bound_to, instance->totem_interface->ip_port, &sockaddr, &addrlen);
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, bound_to,
+	    instance->totem_interface->ip_port, &sockaddr, &addrlen);
 
 	retries = 0;
 	while (1) {
@@ -971,8 +972,8 @@ static int totemudp_build_sockets_ip (
 	/*
 	 * Join group membership on socket
 	 */
-	totemip_totemip_to_sockaddr_convert(mcast_address, instance->totem_interface->ip_port, &mcast_ss, &addrlen);
-	totemip_totemip_to_sockaddr_convert(bound_to, instance->totem_interface->ip_port, &boundto_ss, &addrlen);
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, mcast_address, instance->totem_interface->ip_port, &mcast_ss, &addrlen);
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, bound_to, instance->totem_interface->ip_port, &boundto_ss, &addrlen);
 
 	if (instance->totem_config->broadcast_use == 1) {
 		unsigned int broadcast = 1;
@@ -1005,7 +1006,7 @@ static int totemudp_build_sockets_ip (
 			break;
 			case AF_INET6:
 			memset(&mreq6, 0, sizeof(mreq6));
-			memcpy(&mreq6.ipv6mr_multiaddr, &mcast_sin6->sin6_addr, sizeof(struct in6_addr));
+			memcpy(&mreq6.ipv6mr_multiaddr, &mcast_sin6->sin6_addr, sizeof(mreq6.ipv6mr_multiaddr));
 			mreq6.ipv6mr_interface = interface_num;
 
 			res = setsockopt (sockets->mcast_recv, IPPROTO_IPV6, IPV6_JOIN_GROUP,
@@ -1103,7 +1104,7 @@ static int totemudp_build_sockets_ip (
 	 * as the kernel seems to only put them into effect (for IPV6) when bind()
 	 * is called.
 	 */
-	totemip_totemip_to_sockaddr_convert(mcast_address,
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, mcast_address,
 		instance->totem_interface->ip_port, &sockaddr, &addrlen);
 
 	retries = 0;
@@ -1153,6 +1154,11 @@ static int totemudp_build_sockets (
 	if (res == -1) {
 		return (-1);
 	}
+
+	/* Store found interface_num as scope_id for IPv6 */
+	instance->my_id.scope_id = interface_num;
+	mcast_address->scope_id = interface_num;
+	bindnet_address->scope_id = interface_num;
 
 	totemip_copy(&instance->my_id, bound_to);
 

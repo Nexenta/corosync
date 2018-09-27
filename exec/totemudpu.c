@@ -296,7 +296,7 @@ static inline void ucast_sendmsg (
 	/*
 	 * Build unicast message
 	 */
-	totemip_totemip_to_sockaddr_convert(system_to,
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, system_to,
 		instance->totem_interface->ip_port, &sockaddr, &addrlen);
 	memset(&msg_ucast, 0, sizeof(msg_ucast));
 	msg_ucast.msg_name = &sockaddr;
@@ -388,7 +388,7 @@ static inline void mcast_sendmsg (
 		if (only_active && !member->active && !instance->send_merge_detect_message)
 			continue ;
 
-		totemip_totemip_to_sockaddr_convert(&member->member,
+		totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, &member->member,
 			instance->totem_interface->ip_port, &sockaddr, &addrlen);
 		msg_mcast.msg_name = &sockaddr;
 		msg_mcast.msg_namelen = addrlen;
@@ -730,7 +730,7 @@ static int totemudpu_build_sockets_ip (
 	 * Bind to unicast socket used for token send/receives
 	 * This has the side effect of binding to the correct interface
 	 */
-	totemip_totemip_to_sockaddr_convert(bound_to, instance->totem_interface->ip_port, &sockaddr, &addrlen);
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, bound_to, instance->totem_interface->ip_port, &sockaddr, &addrlen);
 	while (1) {
 		res = bind (instance->token_socket, (struct sockaddr *)&sockaddr, addrlen);
 		if (res == 0) {
@@ -788,6 +788,10 @@ static int totemudpu_build_sockets (
 	if (res == -1) {
 		return (-1);
 	}
+
+	/* Store found interface_num as scope_id for IPv6 */
+	instance->my_id.scope_id = interface_num;
+	bindnet_address->scope_id = interface_num;
 
 	totemip_copy(&instance->my_id, bound_to);
 
@@ -1151,7 +1155,7 @@ static int totemudpu_create_sending_socket(
 	/*
 	 * Bind to sending interface
 	 */
-	totemip_totemip_to_sockaddr_convert(&instance->my_id, 0, &sockaddr, &addrlen);
+	totemip_totemip_to_sockaddr_convert(instance->my_id.scope_id, &instance->my_id, 0, &sockaddr, &addrlen);
 	res = bind (fd, (struct sockaddr *)&sockaddr, addrlen);
 	if (res == -1) {
 		LOGSYS_PERROR (errno, instance->totemudpu_log_level_warning,
