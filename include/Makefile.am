@@ -31,12 +31,12 @@
 
 MAINTAINERCLEANFILES    = Makefile.in corosync/config.h.in
 
-CS_H			= hdb.h cpg.h cfg.h corodefs.h \
+CS_H			= hdb.h cpg.h cfg.h corodefs.h list.h \
 			corotypes.h quorum.h votequorum.h sam.h cmap.h
 
 CS_INTERNAL_H		= ipc_cfg.h ipc_cpg.h ipc_quorum.h 	\
 			quorum.h sq.h ipc_votequorum.h ipc_cmap.h \
-			logsys.h coroapi.h icmap.h mar_gen.h list.h swab.h
+			logsys.h coroapi.h icmap.h mar_gen.h swab.h
 
 TOTEM_H			= totem.h totemip.h totempg.h
 
