@@ -596,6 +596,8 @@ static int32_t cs_ipcs_msg_process(qb_ipcs_connection_t *c,
 
 	is_async_call = (service == CPG_SERVICE && request_pt->id == 2);
 
+	static int nobuf_errcnt = 0;
+
 	/*
 	 * This happens when the message contains some kind of invalid
 	 * parameter, such as an invalid size
@@ -619,6 +621,7 @@ static int32_t cs_ipcs_msg_process(qb_ipcs_connection_t *c,
 				sizeof (response));
 		}
 		res = -EINVAL;
+		nobuf_errcnt = 0;
 	} else if (send_ok < 0) {
 		cnx = qb_ipcs_context_get(c);
 		if (cnx) {
@@ -635,13 +638,21 @@ static int32_t cs_ipcs_msg_process(qb_ipcs_connection_t *c,
 				&response,
 				sizeof (response));
 		} else {
+			if (send_ok == -ENOBUFS && nobuf_errcnt++ > 256) {
+				log_printf(LOGSYS_LEVEL_NOTICE,
+					"*** %s() (%d:%d - %d) giving up and fencing myself!",
+					__func__, service, request_pt->id,
+					is_async_call);
+				exit(-1);
+			}
 			log_printf(LOGSYS_LEVEL_WARNING,
 				"*** %s() (%d:%d - %d) %s!",
 				__func__, service, request_pt->id,
 				is_async_call, strerror(-send_ok));
 		}
 		res = -ENOBUFS;
-	}
+	} else
+		nobuf_errcnt = 0;
 
 	if (send_ok >= 0) {
 		corosync_service[service]->lib_engine[request_pt->id].lib_handler_fn(c, request_pt);
