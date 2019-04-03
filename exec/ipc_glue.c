@@ -742,11 +742,11 @@ static enum qb_ipc_type cs_get_ipc_type (void)
 {
 	char *str;
 	int found = 0;
-	enum qb_ipc_type ret = QB_IPC_NATIVE;
+	enum qb_ipc_type ret = QB_IPC_SOCKET;
 
 	if (icmap_get_string("system.qb_ipc_type", &str) != CS_OK) {
-		log_printf(LOGSYS_LEVEL_DEBUG, "No configured system.qb_ipc_type. Using native ipc");
-		return QB_IPC_NATIVE;
+		log_printf(LOGSYS_LEVEL_DEBUG, "No configured system.qb_ipc_type. Using socket method");
+		return QB_IPC_SOCKET;
 	}
 
 	if (strcmp(str, "native") == 0) {

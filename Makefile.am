@@ -77,13 +77,13 @@ coverity-aggressive:
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/${COROSYSCONFDIR}/service.d
 	$(INSTALL) -d $(DESTDIR)/${COROSYSCONFDIR}/uidgid.d
-	$(INSTALL) -d $(DESTDIR)/${localstatedir}/lib/corosync
+	$(INSTALL) -d $(DESTDIR)/${localstatedir}/run/corosync
 	$(INSTALL) -d $(DESTDIR)/${localstatedir}/log/cluster
 
 uninstall-local:
 	rmdir $(DESTDIR)/${COROSYSCONFDIR}/service.d || :;
 	rmdir $(DESTDIR)/${COROSYSCONFDIR}/uidgid.d || :;
-	rmdir $(DESTDIR)/${localstatedir}/lib/corosync || :;
+	rmdir $(DESTDIR)/${localstatedir}/run/corosync || :;
 	rmdir $(DESTDIR)/${localstatedir}/log/cluster || :;
 
 if AUGTOOL
