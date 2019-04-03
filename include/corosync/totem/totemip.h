@@ -65,6 +65,7 @@ struct totem_ip_address
 	unsigned int   nodeid;
 	unsigned short family;
 	unsigned char  addr[TOTEMIP_ADDRLEN];
+	unsigned short scope_id;
 } __attribute__((packed));
 
 enum totem_ip_version_enum {
@@ -100,7 +101,7 @@ extern const char *totemip_print(const struct totem_ip_address *addr);
 extern const char *totemip_sa_print(const struct sockaddr *sa);
 extern int totemip_sockaddr_to_totemip_convert(const struct sockaddr_storage *saddr,
 					       struct totem_ip_address *ip_addr);
-extern int totemip_totemip_to_sockaddr_convert(struct totem_ip_address *ip_addr,
+extern int totemip_totemip_to_sockaddr_convert(unsigned int scope_id, struct totem_ip_address *ip_addr,
 					       uint16_t port, struct sockaddr_storage *saddr, int *addrlen);
 extern int totemip_parse(struct totem_ip_address *totemip, const char *addr,
 			 enum totem_ip_version_enum ip_version);

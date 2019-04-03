@@ -1339,8 +1339,8 @@ int totemknet_member_add (
 	memset(&local_ss, 0, sizeof(local_ss));
 	memset(&remote_ss, 0, sizeof(remote_ss));
 	/* Casts to remove const */
-	totemip_totemip_to_sockaddr_convert((struct totem_ip_address *)member, port, &remote_ss, &addrlen);
-	totemip_totemip_to_sockaddr_convert((struct totem_ip_address *)local, port, &local_ss, &addrlen);
+	totemip_totemip_to_sockaddr_convert(0, (struct totem_ip_address *)member, port, &remote_ss, &addrlen);
+	totemip_totemip_to_sockaddr_convert(0, (struct totem_ip_address *)local, port, &local_ss, &addrlen);
 
 	if (member->nodeid == instance->our_nodeid) {
 		knet_log_printf (LOGSYS_LEVEL_DEBUG, "knet: loopback link is %d\n", link_no);
