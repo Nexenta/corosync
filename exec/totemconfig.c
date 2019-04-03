@@ -1910,7 +1910,8 @@ int totem_config_validate (
 	}
 
 	/* Check we found a local node name */
-	if (icmap_get_uint32("nodelist.local_node_pos", &u32) != CS_OK) {
+	if (totem_config->transport_number == TOTEM_TRANSPORT_KNET &&
+	    icmap_get_uint32("nodelist.local_node_pos", &u32) != CS_OK) {
 		error_reason = "No valid name found for local host";
 		goto parse_error;
 	}
