@@ -180,7 +180,7 @@ const char *get_state_dir(void)
 			res = snprintf(path, PATH_MAX, "%s", cmap_state_dir);
 			free(cmap_state_dir);
 		} else {
-			res = snprintf(path, PATH_MAX, "%s/%s", LOCALSTATEDIR, "lib/corosync");
+			res = snprintf(path, PATH_MAX, "%s/%s", LOCALSTATEDIR, "run/corosync");
 		}
 
 		assert(res < PATH_MAX);
