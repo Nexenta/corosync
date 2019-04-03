@@ -1700,7 +1700,7 @@ extern int totem_config_read (
 		return -1;
 	}
 
-	totem_config->transport_number = TOTEM_TRANSPORT_KNET;
+	totem_config->transport_number = TOTEM_TRANSPORT_UDP;
 	if (icmap_get_string("totem.transport", &str) == CS_OK) {
 		if (strcmp (str, "udpu") == 0) {
 			totem_config->transport_number = TOTEM_TRANSPORT_UDPU;
@@ -1771,6 +1771,12 @@ extern int totem_config_read (
 			config_convert_nodelist_to_interface(totem_config);
 
 			free(ring0_addr_str);
+		} else {
+			/* backward compat when there is no nodelist defined */
+			snprintf(tmp_key, ICMAP_KEYNAME_MAXLEN, "nodelist.node.0.ring0_addr");
+			icmap_set_string(tmp_key, str);
+			snprintf(tmp_key, ICMAP_KEYNAME_MAXLEN, "nodelist.node.0.nodeid");
+			icmap_set_uint32(tmp_key, totem_config->node_id);
 		}
 
 		free(str);
