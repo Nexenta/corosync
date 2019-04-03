@@ -54,6 +54,8 @@
 #include <stddef.h>
 #include <grp.h>
 #include <pwd.h>
+#include <ifaddrs.h>
+#include <netdb.h>
 
 #include <qb/qblist.h>
 #include <qb/qbutil.h>
@@ -555,6 +557,55 @@ static int str_to_ull(const char *str, unsigned long long int *res)
 	return (0);
 }
 
+
+int
+parse_ipv6local(char *ifname, char *ip6addr)
+{
+       struct ifaddrs *ifaddr, *ifa;
+       int family, n;
+       int err;
+
+       if (getifaddrs(&ifaddr) == -1)
+		return -errno;
+
+	/* Walk through linked list, maintaining head pointer so we
+	 * can free list later */
+	for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++) {
+		if (ifa->ifa_addr == NULL)
+			continue;
+
+		if (strcmp(ifa->ifa_name, ifname) != 0)
+			continue;
+
+		family = ifa->ifa_addr->sa_family;
+		if (family != AF_INET6)
+			continue;
+
+		err = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in6),
+					ip6addr, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+		if (err != 0) {
+			fprintf(stderr, "getnameinfo failed with err=%d\n", err);
+			freeifaddrs(ifaddr);
+			return err;
+		}
+		if ((strlen(ifname) >= 3 && memcmp(ifname, "rep", 3) == 0) || (strlen(ifname) >= 11 && memcmp(ifname, "nedge_repgw", 11) == 0) || (strlen(ifname) >= 9 && memcmp(ifname, "nedge_rep", 9) == 0)) {
+			if (memcmp(ip6addr, "fd00:", 5) != 0) {
+				fprintf(stderr, "%s: rep interface address "
+				    "needs to start with fd00\n", ifname);
+				continue;
+			}
+			break;
+		}
+		if (memcmp(ip6addr, "fe80:", 5) != 0)
+			continue;
+		break;
+	}
+	freeifaddrs(ifaddr);
+	return 0;
+}
+
+
+
 static int main_config_parser_cb(const char *path,
 			char *key,
 			char *value,
@@ -821,7 +872,11 @@ static int main_config_parser_cb(const char *path,
 				add_as_string = 0;
 			}
 			if (strcmp(path, "totem.interface.bindnetaddr") == 0) {
-				data->bindnetaddr = strdup(value);
+				char ipaddr6[INET6_ADDRSTRLEN];
+				if (parse_ipv6local(value, ipaddr6) != 0) {
+					goto atoi_error;
+				}
+				data->bindnetaddr = strdup(ipaddr6);
 				add_as_string = 0;
 			}
 			if (strcmp(path, "totem.interface.mcastaddr") == 0) {

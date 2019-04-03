@@ -87,4 +87,6 @@ const char * short_service_name_get(uint32_t service_id,
  */
 const char *get_state_dir(void);
 
+int parse_ipv6local(char *ifname, char *ip6addr);
+
 #endif /* UTIL_H_DEFINED */
