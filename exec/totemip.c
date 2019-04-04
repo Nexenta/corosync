@@ -298,6 +298,7 @@ int totemip_parse(struct totem_ip_address *totemip, const char *addr,
 	int ret;
 	int debug_ip_family;
 	int ai_family;
+	int retry_cnt = 0;
 
 	memset(&ahints, 0, sizeof(ahints));
 	ahints.ai_socktype = SOCK_DGRAM;
@@ -325,6 +326,7 @@ int totemip_parse(struct totem_ip_address *totemip, const char *addr,
 
 	ahints.ai_family = ai_family;
 
+_try_again:
 	ret = getaddrinfo(addr, NULL, &ahints, &ainfo);
 
 	if (ret == 0 && ai_family == AF_UNSPEC) {
@@ -373,6 +375,11 @@ int totemip_parse(struct totem_ip_address *totemip, const char *addr,
 		} else {
 			log_printf(LOGSYS_LEVEL_DEBUG, "totemip_parse: IPv%u address of %s not resolvable",
 			    debug_ip_family, addr);
+		}
+
+		if (retry_cnt++ < 30) {
+			sleep(1);
+			goto _try_again;
 		}
 
 		return (-1);
