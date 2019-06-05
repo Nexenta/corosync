@@ -1083,6 +1083,7 @@ static void compute_interfaces_diff(struct totem_interface *set1,
 					totemip_print(&set2[ring_no].member_list[set2_pos]),
 					ring_no);
 
+				totempg_member_remove(&set2[ring_no].member_list[set2_pos], ring_no);
 				totempg_member_add(&set2[ring_no].member_list[set2_pos], ring_no);
 			}
 		}
